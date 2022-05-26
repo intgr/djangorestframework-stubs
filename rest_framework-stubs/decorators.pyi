@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Mapping, Optional, Protocol, Sequence, Type, TypeVar, Union
+from typing import Any, Callable, Generic, List, Mapping, Optional, Protocol, Sequence, Type, TypeVar, Union
 
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -10,13 +10,31 @@ from rest_framework.request import Request
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.throttling import BaseThrottle
 from rest_framework.views import APIView, AsView  # noqa: F401
-from typing_extensions import Concatenate, Literal, ParamSpec
+from rest_framework.viewsets import ViewSet
+from typing_extensions import Concatenate, Literal, ParamSpec, overload
 
-_View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
+class ViewCallable(Protocol):
+    def __call__(self, request: Request, *args: Any, **kwargs: Any) -> HttpResponseBase: ...
+
+_View = TypeVar("_View", bound=ViewCallable)
 _P = ParamSpec("_P")
+
+# class _ViewFunc(Protocol):
+#     def __call__(self, __request: Request, *args: Any, **kwargs: Any) -> HttpResponseBase: ...
+#
+# _View = TypeVar("_View", bound=_ViewFunc)
 _RESP = TypeVar("_RESP", bound=HttpResponseBase)
 
-class MethodMapper(dict):
+# class _ActionDetailMethod(Protocol):
+#     def __call__(self, __self: Any, ):
+
+# _VIEWSET = TypeVar("_VIEWSET", bound=ViewSet)
+_ActionListMethod = TypeVar("_ActionListMethod", bound=Callable[[ViewSet, Request], HttpResponseBase], covariant=True)
+_ActionDetailMethod = TypeVar(
+    "_ActionDetailMethod", bound=Callable[[ViewSet, Request, str], HttpResponseBase], covariant=True
+)
+
+class MethodMapper(dict, Generic[_View]):
     def __init__(self, action: _View, methods: Sequence[str]) -> None: ...
     def _map(self, method: str, func: _View) -> _View: ...
     def get(self, func: _View) -> _View: ...  # type: ignore
@@ -65,7 +83,7 @@ class ViewSetAction(Protocol[_View]):
     url_path: str
     url_name: str
     kwargs: Mapping[str, Any]
-    mapping: MethodMapper
+    mapping: MethodMapper[_View]
     __call__: _View
 
 def api_view(
@@ -83,12 +101,23 @@ def throttle_classes(
 ) -> Callable[[_View], _View]: ...
 def permission_classes(permission_classes: Sequence[_PermissionClass]) -> Callable[[_View], _View]: ...
 def schema(view_inspector: Optional[Union[ViewInspector, Type[ViewInspector]]]) -> Callable[[_View], _View]: ...
+@overload
 def action(
     methods: Optional[_MIXED_CASE_HTTP_VERBS] = ...,
-    detail: bool = ...,
+    detail: Literal[False] = ...,
     url_path: Optional[str] = ...,
     url_name: Optional[str] = ...,
     suffix: Optional[str] = ...,
     name: Optional[str] = ...,
     **kwargs: Any,
-) -> Callable[[_View], ViewSetAction[_View]]: ...
+) -> Callable[[_ActionListMethod], ViewSetAction[_ActionListMethod]]: ...
+@overload
+def action(
+    methods: Optional[_MIXED_CASE_HTTP_VERBS] = ...,
+    detail: Literal[True] = ...,
+    url_path: Optional[str] = ...,
+    url_name: Optional[str] = ...,
+    suffix: Optional[str] = ...,
+    name: Optional[str] = ...,
+    **kwargs: Any,
+) -> Callable[[_ActionDetailMethod], ViewSetAction[_ActionDetailMethod]]: ...

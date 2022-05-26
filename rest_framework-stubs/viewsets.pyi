@@ -7,9 +7,12 @@ from rest_framework import generics, mixins, views
 from rest_framework.decorators import ViewSetAction
 from rest_framework.request import Request
 from rest_framework.views import AsView, GenericView
+from typing_extensions import Concatenate, ParamSpec
 
 def _is_extra_action(attr: Any) -> bool: ...
 
+# _P = ParamSpec("_P")
+# _ViewFunc = Callable[[Concatenate[Request, _P]], HttpResponseBase]
 _ViewFunc = Callable[..., HttpResponseBase]
 
 class ViewSetMixin:

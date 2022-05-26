@@ -1,38 +1,49 @@
-- case: test_create
+- case: test_viewset_action_correct
   main: |
-    from rest_framework.mixins import CreateModelMixin
-    from rest_framework.generics import GenericAPIView
-    from rest_framework.serializers import BaseSerializer, ModelSerializer
+    from typing import Optional
+    
     from django.db.models import Model
+    from django.http.response import HttpResponseBase
+    from rest_framework.decorators import action
+    from rest_framework.request import Request
+    from rest_framework.response import Response
+    from rest_framework.viewsets import ModelViewSet
+    
+    
+    class MyModel(Model): ...
+    
 
-    class MyModel(Model):
-        pass
+    class UserViewSet(ModelViewSet):
+        @action(detail=True, methods=['put'])
+        def password(self, request: Request, pk: Optional[str]=None) -> Response: ...
+    
+        @password.mapping.delete
+        def delete_password(self, request: Request, pk: Optional[str]=None) -> Response: ...
 
-    class MyView(GenericAPIView, CreateModelMixin):
-        def perform_create(self, serializer: BaseSerializer[MyModel]) -> None: ...
+        @action(detail=True, methods=['post'])
+        def method(self, request: Request, pk: str) -> HttpResponseBase: ...
 
-- case: test_perform_update
+        @action(detail=False)
+        def items(self, _request: Request) -> Response: ...
+        
+
+- case: test_viewset_action_incorrect
   main: |
-    from rest_framework.mixins import UpdateModelMixin
-    from rest_framework.generics import GenericAPIView
-    from rest_framework.serializers import BaseSerializer
+    from typing import Optional
+
     from django.db.models import Model
+    from rest_framework.decorators import action
+    from rest_framework.request import Request
+    from rest_framework.response import Response
+    from rest_framework.viewsets import ModelViewSet
 
-    class MyModel(Model):
-        pass
 
-    class MyView(GenericAPIView, UpdateModelMixin):
-        def perform_update(self, serializer: BaseSerializer[MyModel]) -> None: ...
+    class MyModel(Model): ...
 
-- case: test_perform_destroy
-  main: |
-    from rest_framework.mixins import DestroyModelMixin
-    from rest_framework.generics import GenericAPIView
-    from rest_framework.serializers import BaseSerializer
-    from django.db.models import Model
 
-    class MyModel(Model):
-        pass
+    class UserViewSet(ModelViewSet):
+        @action(detail=True, methods=['put'], name='Change Password')
+        def password(self, request: Request, pk: Optional[str]=None) -> Response: ...
 
-    class MyView(GenericAPIView, DestroyModelMixin):
-        def perform_destroy(self, instance: MyModel) -> None: ...
+        @password.mapping.delete
+        def delete_password(self, request: Request, pk: Optional[str]=None) -> Response: ...
