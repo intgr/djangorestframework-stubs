@@ -75,3 +75,20 @@
         @cached_property
         def fields(self) -> BindingDict:
             return super().fields
+
+- case: test_model_serializer_instance
+  main: |
+    from rest_framework import serializers
+    from django.contrib.auth.models import User
+
+    class UserSerializer(serializers.ModelSerializer[User]):
+        class Meta:
+            model = User
+
+    one = UserSerializer()
+    reveal_type(one)  # N: Revealed type is "main.UserSerializer"
+    reveal_type(one.instance)  # N: Revealed type is "Union[Any, None]"
+    
+    many = UserSerializer(many=True)
+    reveal_type(many)  # N: Revealed type is "main.UserSerializer"
+    reveal_type(many.instance)  # N: Revealed type is "Union[Any, None]"

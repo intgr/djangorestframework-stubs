@@ -15,6 +15,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -22,10 +23,8 @@ from django.db import models
 from django.db.models import DurationField as ModelDurationField
 from django.db.models import Manager, Model, QuerySet
 from django.db.models.fields import Field as DjangoModelField
-from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
-from typing_extensions import Literal
-
+from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import APIException as APIException
 from rest_framework.exceptions import AuthenticationFailed as AuthenticationFailed
 from rest_framework.exceptions import ErrorDetail as ErrorDetail
@@ -82,7 +81,8 @@ from rest_framework.relations import SlugRelatedField as SlugRelatedField
 from rest_framework.relations import StringRelatedField as StringRelatedField
 from rest_framework.utils.model_meta import FieldInfo, RelationInfo
 from rest_framework.utils.serializer_helpers import BindingDict, BoundField, ReturnDict, ReturnList
-from rest_framework.validators import Validator, UniqueTogetherValidator, BaseUniqueForValidator
+from rest_framework.validators import BaseUniqueForValidator, UniqueTogetherValidator, Validator
+from typing_extensions import Literal
 
 LIST_SERIALIZER_KWARGS: Sequence[str] = ...
 ALL_FIELDS: str = ...
@@ -96,7 +96,11 @@ class BaseSerializer(Generic[_IN], Field[Any, Any, Any, _IN]):
     instance: Optional[_IN]
     initial_data: Any
     _context: Dict[str, Any]
-    def __new__(cls, *args: Any, **kwargs: Any) -> BaseSerializer: ...
+    # XXX requires https://github.com/python/mypy/pull/7656 to be reverted :(
+    @overload
+    def __new__(cls, many: Literal[True], *args: Any, **kwargs: Any) -> ListSerializer[List[_IN]]: ...
+    @overload
+    def __new__(cls, many: Literal[False] = ..., *args: Any, **kwargs: Any) -> Any: ...
     def __class_getitem__(cls, *args, **kwargs): ...
     def __init__(
         self,
@@ -134,7 +138,7 @@ class BaseSerializer(Generic[_IN], Field[Any, Any, Any, _IN]):
     def to_representation(self, instance: _IN) -> Any: ...  # type: ignore[override]
 
 class SerializerMetaclass(type):
-    def __new__(cls, name: Any, bases: Any, attrs: Any): ...
+    # def __new__(cls, name: Any, bases: Any, attrs: Any) -> ListSerializer: ...
     @classmethod
     def _get_declared_fields(cls, bases: Sequence[type], attrs: Dict[str, Any]) -> Dict[str, Field]: ...
 
@@ -219,7 +223,6 @@ class ModelSerializer(Serializer, BaseSerializer[_MT]):
     serializer_url_field: Type[RelatedField] = ...
     serializer_choice_field: Type[Field] = ...
     url_field_name: Optional[str] = ...
-    instance: Optional[Union[_MT, Sequence[_MT]]]  # type: ignore[override]
 
     class Meta:
         model: Type[_MT]  # type: ignore
@@ -228,6 +231,11 @@ class ModelSerializer(Serializer, BaseSerializer[_MT]):
         exclude: Optional[Sequence[str]]
         depth: Optional[int]
         extra_kwargs: Dict[str, Dict[str, Any]]  # type: ignore[override]
+    # def __new__(cls, many: Literal[True], *args: Any, **kwargs: Any) -> ListSerializer[List[_IN]]: ...
+    # @overload
+    # def __new__(cls, many: Literal[True], *args: Any, **kwargs: Any) -> ListSerializer[_IN]: ...
+    # @overload
+    # def __new__(cls, many: Literal[False] = ..., *args: Any, **kwargs: Any) -> BaseSerializer: ...
     def __init__(
         self,
         instance: Union[None, _MT, Sequence[_MT], QuerySet[_MT], Manager[_MT]] = ...,
@@ -248,7 +256,7 @@ class ModelSerializer(Serializer, BaseSerializer[_MT]):
         validators: Optional[Sequence[Validator[_MT]]] = ...,
         allow_null: bool = ...,
         allow_empty: bool = ...,
-    ): ...
+    ) -> None: ...
     def update(self, instance: _MT, validated_data: Any) -> _MT: ...  # type: ignore[override]
     def create(self, validated_data: Any) -> _MT: ...  # type: ignore[override]
     def save(self, **kwargs: Any) -> _MT: ...  # type: ignore[override]
