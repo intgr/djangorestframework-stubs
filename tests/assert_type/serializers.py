@@ -234,6 +234,7 @@ def serializer_many(flag: bool) -> None:
     assert_type(IntSerializer(instance=[1, 2], many=True), serializers.ListSerializer[int])
     assert_type(IntSerializer(many=True), serializers.ListSerializer[int])
     assert_type(IntSerializer(data=[{}], many=True, context={}), serializers.ListSerializer[int])
+    assert_type(IntSerializer(many=flag), IntSerializer | serializers.ListSerializer[int])
     IntSerializer([1, 2])  # type: ignore[call-overload]  # pyright: ignore[reportArgumentType]
     IntSerializer(["a"], many=True)  # type: ignore[call-overload]  # pyright: ignore[reportCallIssue, reportArgumentType]
     # `many` is keyword-only at runtime: a second positional argument is `data`.
@@ -265,3 +266,32 @@ assert_type(serializers.ListSerializer(child=IntSerializer()), serializers.ListS
 assert_type(serializers.ListSerializer(child=UserSerializer()), serializers.ListSerializer[User])
 assert_type(serializers.ListSerializer([User()], child=UserSerializer()), serializers.ListSerializer[User])
 assert_type(serializers.ListSerializer(child=serializers.CharField()), serializers.ListSerializer[Any])
+
+
+# case: list_serializer_preserves_collection_instance_and_save_types
+def list_serializer_collection_types() -> None:
+    serializer = serializers.ListSerializer([User()], child=UserSerializer())
+    if serializer.instance is not None:
+        assert_type(next(iter(serializer.instance)), User)
+    assert_type(serializer.save(), list[User])
+
+
+# case: model_serializer_many_has_collection_instance_and_save_types
+# Issue #827 also concerns the instance attribute, not just the constructor result.
+def model_serializer_many_collection_types() -> None:
+    serializer = UserSerializer([User()], many=True)
+    if serializer.instance is not None:
+        assert_type(next(iter(serializer.instance)), User)
+    assert_type(serializer.save(), list[User])
+
+
+# case: serializer_subclass_accepts_custom_constructor_keywords
+class CustomInitIntSerializer(IntSerializer):
+    def __init__(self, *args: Any, project: str, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.project = project
+
+
+def serializer_custom_init() -> None:
+    assert_type(CustomInitIntSerializer(1, project="example"), CustomInitIntSerializer)
+    assert_type(CustomInitIntSerializer([1, 2], project="example", many=True), serializers.ListSerializer[int])
