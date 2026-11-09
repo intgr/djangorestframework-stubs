@@ -43,7 +43,7 @@ class MyModelSerializer(serializers.ModelSerializer[MyModel]):
 Methods receiving a model instance will use `MyModel` instead of `Any`, and `instance` is
 `MyModel | None`. Passing `many=True` returns a `ListSerializer[MyModel]`, whose `instance`
 is an iterable or Django manager rather than a single model, and whose `save()` returns `list[MyModel]`.
-
+The mypy plugin also preserves this constructor return type when a serializer overrides `__init__`.
 Passing a nonliteral `many: bool` returns a union of the single-object and list serializer types.
 
 ### `Need type annotation` for relation fields

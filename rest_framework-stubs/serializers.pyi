@@ -121,6 +121,7 @@ class BaseSerializer(_BaseSerializerInit[_IN]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> ListSerializer[_IN]: ...
     @overload
     def __new__(
@@ -144,6 +145,7 @@ class BaseSerializer(_BaseSerializerInit[_IN]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> Self: ...
     @overload
     def __new__(  # type: ignore[misc]
@@ -167,6 +169,7 @@ class BaseSerializer(_BaseSerializerInit[_IN]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> Self | ListSerializer[_IN]: ...
     @classmethod
     def many_init(cls, *args: Any, **kwargs: Any) -> ListSerializer: ...
@@ -253,6 +256,7 @@ class ListSerializer(BaseSerializer[Iterable[_IN] | Manager[Any]]):
         allow_null: bool = ...,
         min_length: int | None = ...,
         max_length: int | None = ...,
+        **kwargs: Any,
     ) -> Self: ...
     @override
     def update(self, instance: Iterable[_IN] | Manager[Any], validated_data: Any) -> list[_IN]: ...
@@ -327,6 +331,7 @@ class ModelSerializer(Serializer[_MT]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> ListSerializer[_MT]: ...
     @overload
     def __new__(
@@ -350,6 +355,7 @@ class ModelSerializer(Serializer[_MT]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> Self: ...
     @overload
     def __new__(  # type: ignore[misc]
@@ -373,6 +379,7 @@ class ModelSerializer(Serializer[_MT]):
         error_messages: dict[str, StrOrPromise] | None = None,
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
+        **kwargs: Any,
     ) -> Self | ListSerializer[_MT]: ...
     # The validated values of the model's fields. Not on `Serializer`: a plain serializer may
     # validate into any shape (a dataclass, a domain object).

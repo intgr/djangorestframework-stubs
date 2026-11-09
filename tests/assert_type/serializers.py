@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, TypedDict, assert_type, cast
+from typing import Any, Self, TypedDict, assert_type, cast
 
 from django.contrib.auth.models import Group, User
 from django.db.models import Manager, Q, UniqueConstraint
@@ -299,6 +299,20 @@ class CustomInitIntSerializer(IntSerializer):
         self.project = project
 
 
-def serializer_custom_init() -> None:
+def serializer_custom_init(flag: bool) -> None:
     assert_type(CustomInitIntSerializer(1, project="example"), CustomInitIntSerializer)
+    assert_type(CustomInitIntSerializer(1, project="example", many=False), CustomInitIntSerializer)
     assert_type(CustomInitIntSerializer([1, 2], project="example", many=True), serializers.ListSerializer[int])
+    assert_type(
+        CustomInitIntSerializer(project="example", many=flag),
+        CustomInitIntSerializer | serializers.ListSerializer[int],
+    )
+
+
+# case: serializer_subclass_with_custom_allocator_is_not_wrapped
+class CustomNewIntSerializer(IntSerializer):
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+        return object.__new__(cls)
+
+
+assert_type(CustomNewIntSerializer(many=True), CustomNewIntSerializer)
