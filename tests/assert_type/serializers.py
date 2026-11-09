@@ -236,7 +236,7 @@ def serializer_many(flag: bool) -> None:
     assert_type(IntSerializer(data=[{}], many=True, context={}), serializers.ListSerializer[int])
     assert_type(IntSerializer(many=flag), IntSerializer | serializers.ListSerializer[int])
     IntSerializer([1, 2])  # type: ignore[call-overload]  # pyright: ignore[reportArgumentType]
-    IntSerializer(["a"], many=True)  # type: ignore[call-overload]  # pyright: ignore[reportCallIssue, reportArgumentType]
+    IntSerializer(["a"], many=True)  # type: ignore[list-item]  # pyright: ignore[reportCallIssue, reportArgumentType]
     # `many` is keyword-only at runtime: a second positional argument is `data`.
     IntSerializer(1, True, True)  # type: ignore[call-overload]  # pyright: ignore[reportCallIssue]
 

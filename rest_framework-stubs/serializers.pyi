@@ -145,6 +145,29 @@ class BaseSerializer(_BaseSerializerInit[_IN]):
         validators: Sequence[SerializerValidator[Any]] | None = ...,
         allow_null: bool = ...,
     ) -> Self: ...
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls,
+        instance: _IN | Iterable[_IN] | None = ...,
+        data: Any = ...,
+        *,
+        partial: bool = ...,
+        many: bool,
+        allow_empty: bool = ...,
+        context: Mapping[str, Any] = ...,
+        read_only: bool = ...,
+        write_only: bool = ...,
+        required: bool | None = None,
+        default: Any = ...,
+        initial: Any = ...,
+        source: str | None = None,
+        label: StrOrPromise | None = None,
+        help_text: StrOrPromise | None = None,
+        style: dict[str, Any] | None = None,
+        error_messages: dict[str, StrOrPromise] | None = None,
+        validators: Sequence[SerializerValidator[Any]] | None = ...,
+        allow_null: bool = ...,
+    ) -> Self | ListSerializer[_IN]: ...
     @classmethod
     def many_init(cls, *args: Any, **kwargs: Any) -> ListSerializer: ...
     # Incompatible with `Field.validators` on purpose: a serializer calls its validators with itself as

@@ -42,6 +42,8 @@ class MyModelSerializer(serializers.ModelSerializer[MyModel]):
 
 Which means that methods where the model is being passed around will know the actual type of the model instead of being `Any`. The `instance` attribute on the above serializer will be `MyModel | typing.Sequence[MyModel] | None`.
 
+Passing a nonliteral `many: bool` returns a union of the single-object and list serializer types.
+
 ### `Need type annotation` for relation fields
 
 ```python
