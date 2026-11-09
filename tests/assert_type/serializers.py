@@ -265,14 +265,18 @@ def model_serializer_many(flag: bool) -> None:
 assert_type(serializers.ListSerializer(child=IntSerializer()), serializers.ListSerializer[int])
 assert_type(serializers.ListSerializer(child=UserSerializer()), serializers.ListSerializer[User])
 assert_type(serializers.ListSerializer([User()], child=UserSerializer()), serializers.ListSerializer[User])
+assert_type(serializers.ListSerializer(User.objects, child=UserSerializer()), serializers.ListSerializer[User])
 assert_type(serializers.ListSerializer(child=serializers.CharField()), serializers.ListSerializer[Any])
 
 
 # case: list_serializer_preserves_collection_instance_and_save_types
 def list_serializer_collection_types() -> None:
     serializer = serializers.ListSerializer([User()], child=UserSerializer())
-    if serializer.instance is not None:
-        assert_type(next(iter(serializer.instance)), User)
+    instances: Iterable[User] | Manager[User] | None = serializer.instance
+    if isinstance(instances, Manager):
+        instances = instances.all()
+    if instances is not None:
+        assert_type(next(iter(instances)), User)
     assert_type(serializer.save(), list[User])
 
 
@@ -280,8 +284,11 @@ def list_serializer_collection_types() -> None:
 # Issue #827 also concerns the instance attribute, not just the constructor result.
 def model_serializer_many_collection_types() -> None:
     serializer = UserSerializer([User()], many=True)
-    if serializer.instance is not None:
-        assert_type(next(iter(serializer.instance)), User)
+    instances: Iterable[User] | Manager[User] | None = serializer.instance
+    if isinstance(instances, Manager):
+        instances = instances.all()
+    if instances is not None:
+        assert_type(next(iter(instances)), User)
     assert_type(serializer.save(), list[User])
 
 

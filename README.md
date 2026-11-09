@@ -40,7 +40,9 @@ class MyModelSerializer(serializers.ModelSerializer[MyModel]):
         fields = ("id", "example")
 ```
 
-Which means that methods where the model is being passed around will know the actual type of the model instead of being `Any`. The `instance` attribute on the above serializer will be `MyModel | typing.Sequence[MyModel] | None`.
+Methods receiving a model instance will use `MyModel` instead of `Any`, and `instance` is
+`MyModel | None`. Passing `many=True` returns a `ListSerializer[MyModel]`, whose `instance`
+is an iterable or Django manager rather than a single model, and whose `save()` returns `list[MyModel]`.
 
 Passing a nonliteral `many: bool` returns a union of the single-object and list serializer types.
 

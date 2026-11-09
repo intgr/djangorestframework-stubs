@@ -225,14 +225,14 @@ class Serializer(BaseSerializer[_IN], metaclass=SerializerMetaclass):
     @override
     def errors(self) -> ReturnDict: ...
 
-class ListSerializer(BaseSerializer[_IN]):
+class ListSerializer(BaseSerializer[Iterable[_IN] | Manager[Any]]):
     child: Field | BaseSerializer | None
     many: bool
     default_error_messages: ClassVar[dict[str, StrOrPromise]]
     allow_empty: bool | None
     def __new__(
         cls,
-        instance: Iterable[_IN] | None = ...,
+        instance: Iterable[_IN] | Manager[Any] | None = ...,
         data: Any = ...,
         *,
         partial: bool = ...,
@@ -254,6 +254,12 @@ class ListSerializer(BaseSerializer[_IN]):
         min_length: int | None = ...,
         max_length: int | None = ...,
     ) -> Self: ...
+    @override
+    def update(self, instance: Iterable[_IN] | Manager[Any], validated_data: Any) -> list[_IN]: ...
+    @override
+    def create(self, validated_data: Any) -> list[_IN]: ...
+    @override
+    def save(self, **kwargs: Any) -> list[_IN]: ...
     def run_child_validation(self, data: Any) -> Any: ...
     # The list-level validators receive the whole list, with the `ListSerializer` as context.
     @override  # type: ignore[explicit-override, override]
@@ -266,7 +272,7 @@ class ListSerializer(BaseSerializer[_IN]):
     @override
     def to_internal_value(self, data: Any) -> list[Any]: ...
     @override
-    def to_representation(self, data: Manager[Any] | Iterable[Any]) -> list[Any]: ...  # type: ignore[override]
+    def to_representation(self, data: Manager[Any] | Iterable[Any]) -> list[Any]: ...
     @override
     def get_initial(self) -> list[Mapping[Any, Any]]: ...
     def validate(self, attrs: Any) -> Any: ...
